@@ -9,7 +9,7 @@ export interface ChatMessage {
 
 export async function getChatResponse(history: ChatMessage[], message: string, language: string = 'en') {
   const chat = ai.chats.create({
-    model: "gemini-3.1-pro-preview",
+    model: "gemini-3-flash-preview",
     config: {
       systemInstruction: `You are a helpful medical assistant for the MedTrack AI app. You help users understand their medications, provide general health advice, and answer questions about medicine adherence. Always remind users to consult with a professional doctor for serious medical concerns. You have access to the user's current context if provided. Please respond in ${language} language. Use Markdown formatting (bolding, lists, etc.) to make your responses clear and easy to read.`,
     },
