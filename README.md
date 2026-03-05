@@ -2,6 +2,8 @@
 
 **MedTracker** is a full‑stack MERN‑style application implemented in TypeScript. It helps users track medication and prescription data while providing AI-powered chat features and secure authentication. The project pairs a React/Vite frontend with a Node/Express backend and is container‑ready via Docker.
 
+**MedTracker is in Live**: https://ai-based-medtracker.onrender.com/
+
 ---
 
 ## 🚀 Key Features
