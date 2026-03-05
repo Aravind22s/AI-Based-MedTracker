@@ -1,9 +1,5 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
-if (!process.env.GEMINI_API_KEY) {
-  console.error("GEMINI_API_KEY environment variable is not set. Please configure it in your Render project settings.");
-}
-
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 
 export interface ParsedMedicine {

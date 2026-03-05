@@ -381,6 +381,103 @@ app.get("/api/behavior-analysis", authenticateToken, async (req: any, res) => {
   }
 });
 
+// AI/Gemini endpoints (kept on server to avoid exposing API key)
+app.post("/api/ai/parse-medicine", authenticateToken, async (req: any, res) => {
+  try {
+    const { input } = req.body;
+    if (!input) {
+      return res.status(400).json({ error: "Input is required" });
+    }
+    
+    const { parseMedicineInput } = await import("./src/services/geminiService.ts");
+    const result = await parseMedicineInput(input);
+    res.json(result);
+  } catch (error: any) {
+    console.error("Error parsing medicine:", error);
+    res.status(500).json({ error: error.message || "Failed to parse medicine" });
+  }
+});
+
+app.post("/api/ai/parse-prescription", authenticateToken, async (req: any, res) => {
+  try {
+    const { image } = req.body;
+    if (!image) {
+      return res.status(400).json({ error: "Image is required" });
+    }
+    
+    const { parsePrescriptionImage } = await import("./src/services/geminiService.ts");
+    const result = await parsePrescriptionImage(image);
+    res.json(result);
+  } catch (error: any) {
+    console.error("Error parsing prescription:", error);
+    res.status(500).json({ error: error.message || "Failed to parse prescription" });
+  }
+});
+
+app.post("/api/ai/chat", authenticateToken, async (req: any, res) => {
+  try {
+    const { history, message, language } = req.body;
+    if (!message) {
+      return res.status(400).json({ error: "Message is required" });
+    }
+    
+    const { getChatResponse } = await import("./src/services/chatService.ts");
+    const response = await getChatResponse(history || [], message, language || 'en');
+    res.json({ response });
+  } catch (error: any) {
+    console.error("Error in chat:", error);
+    res.status(500).json({ error: error.message || "Failed to get chat response" });
+  }
+});
+
+app.post("/api/ai/behavior-insights", authenticateToken, async (req: any, res) => {
+  try {
+    const { stats, language } = req.body;
+    if (!stats) {
+      return res.status(400).json({ error: "Stats are required" });
+    }
+    
+    const { getBehavioralAnalysisInsights } = await import("./src/services/chatService.ts");
+    const insights = await getBehavioralAnalysisInsights(stats, language || 'en');
+    res.json({ insights });
+  } catch (error: any) {
+    console.error("Error analyzing behavior:", error);
+    res.status(500).json({ error: error.message || "Failed to analyze behavior" });
+  }
+});
+
+app.post("/api/ai/translate", authenticateToken, async (req: any, res) => {
+  try {
+    const { text, targetLanguage } = req.body;
+    if (!text || !targetLanguage) {
+      return res.status(400).json({ error: "Text and targetLanguage are required" });
+    }
+    
+    const { translateText } = await import("./src/services/chatService.ts");
+    const translatedText = await translateText(text, targetLanguage);
+    res.json({ text: translatedText });
+  } catch (error: any) {
+    console.error("Error translating text:", error);
+    res.status(500).json({ error: error.message || "Failed to translate text" });
+  }
+});
+
+app.post("/api/ai/medicine-insights", authenticateToken, async (req: any, res) => {
+  try {
+    const { medicineName, dosage, frequency, instructions, language } = req.body;
+    if (!medicineName || !dosage || !frequency) {
+      return res.status(400).json({ error: "Medicine name, dosage, and frequency are required" });
+    }
+    
+    const { getMedicineInsights } = await import("./src/services/chatService.ts");
+    const insights = await getMedicineInsights(medicineName, dosage, frequency, instructions, language || 'en');
+    res.json({ insights });
+  } catch (error: any) {
+    console.error("Error generating medicine insights:", error);
+    res.status(500).json({ error: error.message || "Failed to generate insights" });
+  }
+});
+
 // Catch-all for undefined API routes
 app.all("/api/*", (req, res) => {
   res.status(404).json({ error: `API route not found: ${req.method} ${req.url}` });

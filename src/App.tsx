@@ -30,8 +30,10 @@ import {
   RotateCcw
 } from 'lucide-react';
 import { useAuthStore } from './store/authStore';
-import { parseMedicineInput, ParsedMedicine, parsePrescriptionImage } from './services/geminiService';
-import { getChatResponse, ChatMessage, translateText, getMedicineInsights, getBehavioralAnalysisInsights } from './services/chatService';
+import { setAuthToken, parseMedicineInput, parsePrescriptionImage } from './services/apiClient';
+import type { ParsedMedicine } from './services/geminiService';
+import type { ChatMessage } from './services/chatService';
+import { getChatResponse, translateText, getMedicineInsights, getBehavioralAnalysisInsights } from './services/apiClient';
 import { 
   LineChart, 
   Line, 
@@ -326,6 +328,7 @@ export default function App() {
 
   useEffect(() => {
     if (token) {
+      setAuthToken(token);
       fetchData();
       const interval = setInterval(checkReminders, 10000); // Check every 10s for better precision
       return () => clearInterval(interval);
