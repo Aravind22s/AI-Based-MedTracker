@@ -1,14 +1,14 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { 
-  Plus, 
-  LogOut, 
-  Calendar, 
-  Clock, 
-  CheckCircle2, 
-  AlertCircle, 
-  BarChart3, 
-  Pill, 
+import {
+  Plus,
+  LogOut,
+  Calendar,
+  Clock,
+  CheckCircle2,
+  AlertCircle,
+  BarChart3,
+  Pill,
   ChevronRight,
   Mic,
   Send,
@@ -34,13 +34,13 @@ import { setAuthToken, parseMedicineInput, parsePrescriptionImage } from './serv
 import type { ParsedMedicine } from './services/geminiService';
 import type { ChatMessage } from './services/chatService';
 import { getChatResponse, translateText, getMedicineInsights, getBehavioralAnalysisInsights } from './services/apiClient';
-import { 
-  LineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
   AreaChart,
   Area,
@@ -71,13 +71,13 @@ const Button = ({ className, variant = 'primary', ...props }: any) => {
     danger: 'bg-red-50 text-red-600 hover:bg-red-100',
   };
   return (
-    <button 
+    <button
       className={cn(
         'px-4 py-2 rounded-xl font-medium transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2',
         variants[variant as keyof typeof variants],
         className
-      )} 
-      {...props} 
+      )}
+      {...props}
     />
   );
 };
@@ -118,7 +118,7 @@ export default function App() {
   // Analytics Calculations
   const adherenceStats = useMemo(() => {
     if (analytics.length === 0) return { streak: 0, missedLast7: 0, bestDay: 'N/A' };
-    
+
     // Streak
     let streak = 0;
     const sorted = [...analytics].sort((a, b) => b.date.localeCompare(a.date));
@@ -139,7 +139,7 @@ export default function App() {
       dayMap[d].total += day.total;
       dayMap[d].taken += day.taken;
     });
-    
+
     let bestDay = 'N/A';
     let maxRate = -1;
     Object.entries(dayMap).forEach(([day, stats]) => {
@@ -223,7 +223,7 @@ export default function App() {
       if (token) {
         headers.Authorization = `Bearer ${token}`;
       }
-      
+
       const res = await fetch(url, {
         ...options,
         headers
@@ -231,16 +231,16 @@ export default function App() {
 
       const contentType = res.headers.get("content-type");
       const isJson = contentType && contentType.includes("application/json");
-      
+
       // Check if we hit the platform warmup page or a non-JSON response when we expect one
       // (Most of our API calls expect JSON)
       const text = await res.clone().text();
-      const isWarmup = text.includes("Please wait while your application starts") || 
-                       text.includes("Starting Server...") ||
-                       text.includes("warmup_start_time") ||
-                       text.includes("AI Studio Logo") ||
-                       text.includes("warmup") ||
-                       (text.includes("<!doctype html>") && url.startsWith('/api/'));
+      const isWarmup = text.includes("Please wait while your application starts") ||
+        text.includes("Starting Server...") ||
+        text.includes("warmup_start_time") ||
+        text.includes("AI Studio Logo") ||
+        text.includes("warmup") ||
+        (text.includes("<!doctype html>") && url.startsWith('/api/'));
 
       // Only retry on 503 if it's NOT JSON (likely platform issue, not our DB error)
       const shouldRetry = isWarmup || (res.status === 503 && !isJson) || (!isJson && res.status === 200 && url.startsWith('/api/'));
@@ -292,13 +292,13 @@ export default function App() {
           const contentType = res.headers.get("content-type");
           const isJson = contentType && contentType.includes("application/json");
           const text = await res.clone().text();
-          
-          const isWarmup = text.includes("Please wait while your application starts") || 
-                           text.includes("Starting Server...") || 
-                           text.includes("<!doctype html>") || 
-                           text.includes("warmup_start_time") ||
-                           text.includes("warmup");
-          
+
+          const isWarmup = text.includes("Please wait while your application starts") ||
+            text.includes("Starting Server...") ||
+            text.includes("<!doctype html>") ||
+            text.includes("warmup_start_time") ||
+            text.includes("warmup");
+
           if (isWarmup || (res.status === 503 && !isJson)) {
             if (retries > 0) {
               await new Promise(resolve => setTimeout(resolve, 4000));
@@ -312,7 +312,7 @@ export default function App() {
         if (res.ok) {
           const text = await res.text();
           if (!text) return;
-          
+
           const contentType = res.headers.get("content-type");
           if (contentType && contentType.includes("application/json")) {
             const data = JSON.parse(text);
@@ -338,9 +338,9 @@ export default function App() {
   const playReminderSound = async (soundType: string = 'default', customDataOverride?: string | null) => {
     const AudioContextClass = (window.AudioContext || (window as any).webkitAudioContext);
     if (!AudioContextClass) return;
-    
+
     const audioCtx = new AudioContextClass();
-    
+
     try {
       if (audioCtx.state === 'suspended') {
         await audioCtx.resume();
@@ -356,7 +356,7 @@ export default function App() {
         source.buffer = audioBuffer;
         source.connect(audioCtx.destination);
         source.start();
-        
+
         // Close context after playback
         source.onended = () => audioCtx.close();
         return;
@@ -387,7 +387,7 @@ export default function App() {
 
       oscillator.start();
       oscillator.stop(audioCtx.currentTime + 0.5);
-      
+
       oscillator.onended = () => audioCtx.close();
     } catch (e) {
       console.error("Audio playback error", e);
@@ -403,8 +403,8 @@ export default function App() {
     if (medicinesRef.current.length === 0) return;
 
     medicinesRef.current.forEach(med => {
-      const times = med.reminder_times && med.reminder_times.length > 0 
-        ? med.reminder_times 
+      const times = med.reminder_times && med.reminder_times.length > 0
+        ? med.reminder_times
         : (med.reminder_time ? [med.reminder_time] : []);
 
       if (times.length === 0) return;
@@ -415,27 +415,27 @@ export default function App() {
 
         // Check if it's time for the reminder
         const isReminderTime = time === currentTimeStr;
-        
+
         // Unique key for this specific reminder occurrence
         const reminderKey = `${med.id}-${todayStr}-${time}`;
 
         if (!isSnoozed && isReminderTime && !lastRemindedRef.current[reminderKey]) {
           // For multiple times, we trigger if it's the exact minute.
           // The user can log it, which adds a log entry.
-          
+
           lastRemindedRef.current[reminderKey] = 'triggered';
           console.log(`[Reminder] Triggering for ${med.name} at ${time}`);
-          
+
           playReminderSound(userRef.current?.reminder_sound);
           addToast(`Time for your ${med.name} (${med.dosage})`, 'info');
-          setNotificationHistory(prev => [{ 
-            id: Date.now(), 
-            medName: med.name, 
+          setNotificationHistory(prev => [{
+            id: Date.now(),
+            medName: med.name,
             dosage: med.dosage,
-            time: time, 
-            date: todayStr 
+            time: time,
+            date: todayStr
           }, ...prev].slice(0, 10));
-          
+
           if (Notification.permission === 'granted') {
             try {
               new Notification(`Time for your ${med.name}`, {
@@ -447,7 +447,7 @@ export default function App() {
               console.error("Notification failed", e);
             }
           }
-          
+
           setActiveReminder(med);
         }
       });
@@ -463,7 +463,7 @@ export default function App() {
         authenticatedFetch('/api/user/me'),
         authenticatedFetch('/api/behavior-analysis'),
       ]);
-      
+
       // Check for DB connection error (503)
       const anyRes = [medsRes, logsRes, statsRes, userRes, behaviorRes].find(r => r.status === 503);
       if (anyRes) {
@@ -473,12 +473,12 @@ export default function App() {
       } else {
         setDbError(null);
       }
-      
+
       const safeJson = async (res: Response) => {
         try {
           const text = await res.text();
           if (!text) return null;
-          
+
           const contentType = res.headers.get("content-type");
           if (res.ok && contentType && contentType.includes("application/json")) {
             return JSON.parse(text);
@@ -536,17 +536,17 @@ export default function App() {
     setLoading(true);
     const endpoint = isLogin ? '/api/auth/login' : '/api/auth/signup';
     const body = isLogin ? { email, password } : { email, password, name };
-    
+
     try {
       const res = await authenticatedFetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       }, 30); // Even more retries for auth
-      
+
       const contentType = res.headers.get("content-type");
       const text = await res.text();
-      
+
       if (contentType && contentType.includes("application/json") && text) {
         let data: any;
         try {
@@ -557,7 +557,7 @@ export default function App() {
           // If parsing fails, it might be a transient issue, but we already retried in authenticatedFetch
           return;
         }
-        
+
         if (res.ok) {
           setAuth(data.user, data.token);
         } else {
@@ -579,10 +579,10 @@ export default function App() {
     try {
       const method = editingMedicine ? 'PUT' : 'POST';
       const url = editingMedicine ? `/api/medicines/${editingMedicine.id}` : '/api/medicines';
-      
+
       const res = await authenticatedFetch(url, {
         method,
-        headers: { 
+        headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
@@ -599,7 +599,7 @@ export default function App() {
       } else {
         const contentType = res.headers.get("content-type");
         const text = await res.text();
-        
+
         if (contentType && contentType.includes("application/json") && text) {
           let data: any;
           try {
@@ -630,7 +630,7 @@ export default function App() {
 
   const handleSendMessage = async () => {
     if (!chatInput.trim()) return;
-    
+
     const userMessage: ChatMessage = { role: 'user', text: chatInput };
     setChatHistory(prev => [...prev, userMessage]);
     setChatInput('');
@@ -657,9 +657,9 @@ export default function App() {
     setIsInsightLoading(true);
     try {
       const content = await getMedicineInsights(
-        med.name, 
-        med.dosage, 
-        med.frequency, 
+        med.name,
+        med.dosage,
+        med.frequency,
         med.instructions,
         LANGUAGES.find(l => l.code === user?.language)?.name || 'English'
       );
@@ -676,22 +676,22 @@ export default function App() {
     try {
       const res = await authenticatedFetch('/api/user/settings', {
         method: 'PUT',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           reminder_sound: sound,
           custom_sound_data: customData
         }),
       });
       if (res.ok) {
-        setAuth({ 
-          ...user, 
-          reminder_sound: sound, 
-          custom_sound_data: customData !== undefined ? customData : user?.custom_sound_data 
+        setAuth({
+          ...user,
+          reminder_sound: sound,
+          custom_sound_data: customData !== undefined ? customData : user?.custom_sound_data
         } as any, token!);
         addToast("Settings saved", "success");
-        
+
         // Small delay to ensure state is updated if we need to play custom sound
         setTimeout(() => playReminderSound(sound), 100);
       }
@@ -704,7 +704,7 @@ export default function App() {
     try {
       const res = await authenticatedFetch('/api/user/settings', {
         method: 'PUT',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ language: langCode }),
@@ -722,8 +722,8 @@ export default function App() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 500000) { // 500KB limit
-      alert("File is too large. Please choose a file under 500KB.");
+    if (file.size > 5000000) { // 5MB limit
+      alert("File is too large. Please choose a file under 5MB.");
       return;
     }
 
@@ -739,7 +739,7 @@ export default function App() {
     try {
       const res = await authenticatedFetch('/api/logs', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
@@ -761,7 +761,7 @@ export default function App() {
     try {
       const res = await authenticatedFetch(`/api/medicines/${medicineId}/snooze`, {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ minutes }),
@@ -823,20 +823,20 @@ export default function App() {
 
   const handleDeleteMedicine = async (id: number) => {
     console.log(`[CLIENT] handleDeleteMedicine starting for ID: ${id}`);
-    
+
     try {
       addToast("Deleting medicine...", "info");
-      
+
       const res = await authenticatedFetch(`/api/medicines/${id}`, {
         method: 'DELETE'
       });
-      
+
       console.log(`[CLIENT] Delete response status: ${res.status}`);
-      
+
       let data: any = {};
       const contentType = res.headers.get("content-type");
       const text = await res.text();
-      
+
       if (contentType && contentType.includes("application/json") && text) {
         try {
           data = JSON.parse(text);
@@ -862,7 +862,7 @@ export default function App() {
   if (!token) {
     return (
       <div className="min-h-screen bg-zinc-50 flex items-center justify-center p-4 font-sans">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="w-full max-w-md bg-white rounded-3xl shadow-xl border border-zinc-100 p-8"
@@ -881,8 +881,8 @@ export default function App() {
             {!isLogin && (
               <div>
                 <label className="block text-sm font-medium text-zinc-700 mb-1">Name</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="w-full px-4 py-3 rounded-xl border border-zinc-200 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
@@ -893,8 +893,8 @@ export default function App() {
             )}
             <div>
               <label className="block text-sm font-medium text-zinc-700 mb-1">Email</label>
-              <input 
-                type="email" 
+              <input
+                type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl border border-zinc-200 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
@@ -904,8 +904,8 @@ export default function App() {
             </div>
             <div>
               <label className="block text-sm font-medium text-zinc-700 mb-1">Password</label>
-              <input 
-                type="password" 
+              <input
+                type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl border border-zinc-200 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
@@ -919,7 +919,7 @@ export default function App() {
           </form>
 
           <div className="mt-6 text-center space-y-4">
-            <button 
+            <button
               onClick={() => {
                 setEmail('demo@example.com');
                 setPassword('password123');
@@ -929,7 +929,7 @@ export default function App() {
               Use Demo Credentials
             </button>
             <div>
-              <button 
+              <button
                 onClick={() => setIsLogin(!isLogin)}
                 className="text-emerald-600 font-medium hover:underline"
               >
@@ -947,7 +947,7 @@ export default function App() {
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-md border-b border-zinc-100 px-6 py-4 pt-safe sticky top-0 z-30 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <motion.div 
+          <motion.div
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center shadow-sm"
@@ -960,7 +960,7 @@ export default function App() {
           </div>
         </div>
         <div className="flex items-center gap-1">
-          <motion.button 
+          <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={() => setShowNotifications(!showNotifications)}
             className="p-2 text-zinc-400 hover:text-emerald-600 transition-colors relative"
@@ -970,9 +970,9 @@ export default function App() {
               <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />
             )}
           </motion.button>
-          <motion.button 
+          <motion.button
             whileTap={{ scale: 0.9 }}
-            onClick={logout} 
+            onClick={logout}
             className="p-2 text-zinc-400 hover:text-red-500 transition-colors"
           >
             <LogOut className="w-5 h-5" />
@@ -992,7 +992,7 @@ export default function App() {
               >
                 <div className="p-4 border-b border-zinc-50 flex items-center justify-between bg-zinc-50/50">
                   <h3 className="font-bold text-sm">Recent Alerts</h3>
-                  <button 
+                  <button
                     onClick={() => setNotificationHistory([])}
                     className="text-[10px] uppercase font-bold text-zinc-400 hover:text-red-500 transition-colors"
                   >
@@ -1004,7 +1004,7 @@ export default function App() {
                     <div className="p-8 text-center">
                       <Bell className="w-8 h-8 text-zinc-100 mx-auto mb-2" />
                       <p className="text-xs text-zinc-400 mb-4">No recent alerts</p>
-                      <button 
+                      <button
                         onClick={() => {
                           addToast("Test Alert Triggered!", "info");
                           playReminderSound(user?.reminder_sound);
@@ -1042,7 +1042,7 @@ export default function App() {
       <main className="max-w-2xl mx-auto p-6 space-y-6">
         <AnimatePresence mode="wait">
           {view === 'dashboard' && (
-            <motion.div 
+            <motion.div
               key="dashboard"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -1069,19 +1069,19 @@ export default function App() {
                   {medicines.map((med) => {
                     const lastLog = logs.find(l => l.medicine_id === med.id);
                     const isTakenToday = lastLog && isSameDay(parseISO(lastLog.taken_at), new Date());
-                    
+
                     return (
-                      <motion.div 
-                        key={med.id} 
+                      <motion.div
+                        key={med.id}
                         whileHover={{ y: -2 }}
                         whileTap={{ scale: 0.98 }}
                         className="group relative overflow-hidden bg-white rounded-3xl p-5 shadow-sm border border-zinc-100 transition-all active:shadow-md"
                       >
                         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                           <div className="flex gap-4">
-                            <motion.div 
+                            <motion.div
                               initial={false}
-                              animate={{ 
+                              animate={{
                                 backgroundColor: isTakenToday ? "#ecfdf5" : "#f4f4f5",
                                 color: isTakenToday ? "#059669" : "#71717a"
                               }}
@@ -1092,7 +1092,7 @@ export default function App() {
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 flex-wrap">
                                 <h4 className="font-bold text-lg text-zinc-900 truncate">{med.name}</h4>
-                                <motion.button 
+                                <motion.button
                                   whileTap={{ scale: 0.9 }}
                                   onClick={() => handleGetInsight(med)}
                                   className="p-1.5 text-emerald-500 hover:bg-emerald-50 rounded-lg transition-colors"
@@ -1117,7 +1117,7 @@ export default function App() {
                                 <div className="mt-2 flex items-start gap-2 bg-zinc-50/50 p-2 rounded-xl border border-zinc-100/50">
                                   <p className="text-[11px] text-zinc-500 italic flex-1 leading-relaxed">"{med.instructions}"</p>
                                   {user?.language && user.language !== 'en' && (
-                                    <button 
+                                    <button
                                       onClick={async () => {
                                         const translated = await translateText(med.instructions, LANGUAGES.find(l => l.code === user.language)?.name || 'English');
                                         addToast(`Translated: ${translated}`, "info");
@@ -1140,7 +1140,7 @@ export default function App() {
                           <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-zinc-50">
                             <div className="flex gap-2">
                               {!isTakenToday && (
-                                <Button 
+                                <Button
                                   variant="outline"
                                   onClick={() => handleSnooze(med.id)}
                                   className="px-3 py-1.5 text-xs sm:text-sm whitespace-nowrap"
@@ -1148,7 +1148,7 @@ export default function App() {
                                   Snooze
                                 </Button>
                               )}
-                              <Button 
+                              <Button
                                 variant={isTakenToday ? 'secondary' : 'primary'}
                                 disabled={isTakenToday}
                                 onClick={() => handleLogDose(med.id)}
@@ -1158,7 +1158,7 @@ export default function App() {
                               </Button>
                             </div>
                             <div className="flex items-center gap-1">
-                              <motion.button 
+                              <motion.button
                                 whileTap={{ scale: 0.9 }}
                                 onClick={() => handleEditClick(med)}
                                 className="p-2 text-zinc-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all"
@@ -1166,7 +1166,7 @@ export default function App() {
                               >
                                 <Edit2 className="w-4 h-4" />
                               </motion.button>
-                              <motion.button 
+                              <motion.button
                                 whileTap={{ scale: 0.9 }}
                                 onClick={() => handleDeleteMedicine(med.id)}
                                 className="p-2 text-zinc-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
@@ -1201,7 +1201,7 @@ export default function App() {
           )}
 
           {view === 'analytics' && (
-            <motion.div 
+            <motion.div
               key="analytics"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -1209,8 +1209,8 @@ export default function App() {
               className="space-y-6 pb-64"
             >
               <h3 className="text-2xl font-bold tracking-tight">Adherence Analytics</h3>
-              
-              <motion.div 
+
+              <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="bg-white rounded-[2rem] p-6 shadow-sm border border-zinc-100 h-80 flex flex-col"
@@ -1227,28 +1227,28 @@ export default function App() {
                     <AreaChart data={analytics}>
                       <defs>
                         <linearGradient id="colorTaken" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f4f4f5" />
-                      <XAxis 
-                        dataKey="date" 
-                        axisLine={false} 
-                        tickLine={false} 
+                      <XAxis
+                        dataKey="date"
+                        axisLine={false}
+                        tickLine={false}
                         tick={{ fontSize: 10, fill: '#a1a1aa' }}
                         tickFormatter={(val) => format(parseISO(val), 'MMM d')}
                       />
                       <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#a1a1aa' }} />
-                      <Tooltip 
+                      <Tooltip
                         contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', padding: '12px' }}
                       />
-                      <Area 
-                        type="monotone" 
-                        dataKey="taken" 
-                        stroke="#10b981" 
-                        fillOpacity={1} 
-                        fill="url(#colorTaken)" 
+                      <Area
+                        type="monotone"
+                        dataKey="taken"
+                        stroke="#10b981"
+                        fillOpacity={1}
+                        fill="url(#colorTaken)"
                         strokeWidth={4}
                       />
                     </AreaChart>
@@ -1257,7 +1257,7 @@ export default function App() {
               </motion.div>
 
               <div className="grid grid-cols-2 gap-4">
-                <motion.div 
+                <motion.div
                   whileTap={{ scale: 0.98 }}
                   className="bg-orange-50 rounded-[2rem] p-6 border border-orange-100 flex flex-col items-center justify-center text-center"
                 >
@@ -1267,8 +1267,8 @@ export default function App() {
                   <span className="text-3xl font-bold text-orange-900 leading-none mb-1">{adherenceStats.streak}</span>
                   <span className="text-[10px] text-orange-600 uppercase tracking-widest font-bold">Day Streak</span>
                 </motion.div>
-                
-                <motion.div 
+
+                <motion.div
                   whileTap={{ scale: 0.98 }}
                   className="bg-red-50 rounded-[2rem] p-6 border border-red-100 flex flex-col items-center justify-center text-center"
                 >
@@ -1279,7 +1279,7 @@ export default function App() {
                   <span className="text-[10px] text-red-600 uppercase tracking-widest font-bold">Missed (7d)</span>
                 </motion.div>
 
-                <motion.div 
+                <motion.div
                   whileTap={{ scale: 0.98 }}
                   className="col-span-2 bg-blue-50 rounded-[2.5rem] p-6 border border-blue-100 flex items-center gap-6"
                 >
@@ -1293,7 +1293,7 @@ export default function App() {
                 </motion.div>
               </div>
 
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-zinc-100"
@@ -1308,22 +1308,22 @@ export default function App() {
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={medicineAdherence} layout="vertical" margin={{ left: 20 }}>
                       <XAxis type="number" hide />
-                      <YAxis 
-                        dataKey="name" 
-                        type="category" 
-                        axisLine={false} 
-                        tickLine={false} 
+                      <YAxis
+                        dataKey="name"
+                        type="category"
+                        axisLine={false}
+                        tickLine={false}
                         tick={{ fontSize: 12, fill: '#71717a', fontWeight: 600 }}
                         width={80}
                       />
-                      <Tooltip 
+                      <Tooltip
                         cursor={{ fill: 'transparent' }}
                         contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }}
                       />
-                      <Bar 
-                        dataKey="taken" 
-                        fill="#10b981" 
-                        radius={[0, 8, 8, 0]} 
+                      <Bar
+                        dataKey="taken"
+                        fill="#10b981"
+                        radius={[0, 8, 8, 0]}
                         barSize={24}
                       />
                     </BarChart>
@@ -1331,7 +1331,7 @@ export default function App() {
                 </div>
               </motion.div>
 
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="bg-emerald-600 rounded-[2.5rem] p-8 text-white shadow-xl shadow-emerald-200 relative overflow-hidden"
@@ -1342,7 +1342,7 @@ export default function App() {
                       <Sparkles className="w-4 h-4" />
                       AI Behavioral Analysis
                     </h4>
-                    <motion.button 
+                    <motion.button
                       whileTap={{ scale: 0.9 }}
                       onClick={() => generateBehavioralInsights(behaviorAnalysis)}
                       disabled={isBehaviorLoading}
@@ -1351,7 +1351,7 @@ export default function App() {
                       <RotateCcw className={cn("w-4 h-4", isBehaviorLoading && "animate-spin")} />
                     </motion.button>
                   </div>
-                  
+
                   {isBehaviorLoading ? (
                     <div className="space-y-4">
                       <div className="h-4 bg-white/20 rounded-full animate-pulse w-3/4" />
@@ -1370,7 +1370,7 @@ export default function App() {
               </motion.div>
 
               <div className="grid grid-cols-2 gap-4">
-                <motion.div 
+                <motion.div
                   whileTap={{ scale: 0.98 }}
                   className="bg-zinc-900 rounded-[2rem] p-6 text-white flex flex-col items-center justify-center text-center shadow-xl"
                 >
@@ -1379,7 +1379,7 @@ export default function App() {
                   </span>
                   <span className="text-[10px] text-zinc-400 uppercase tracking-widest font-bold">Overall Adherence</span>
                 </motion.div>
-                <motion.div 
+                <motion.div
                   whileTap={{ scale: 0.98 }}
                   className="bg-white rounded-[2rem] p-6 border border-zinc-100 flex flex-col items-center justify-center text-center shadow-sm"
                 >
@@ -1391,7 +1391,7 @@ export default function App() {
           )}
 
           {view === 'add' && (
-            <motion.div 
+            <motion.div
               key={editingMedicine ? `edit-${editingMedicine.id}` : 'add'}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -1407,17 +1407,17 @@ export default function App() {
 
               {!editingMedicine && (
                 <div className="w-full">
-                  <motion.div 
+                  <motion.div
                     whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.98 }}
                     className="bg-zinc-900 text-white border-none p-8 rounded-[2.5rem] relative overflow-hidden flex flex-col justify-center items-center text-center shadow-2xl shadow-emerald-900/20"
                   >
                     <div className="relative z-10">
-                      <motion.div 
-                        animate={{ 
+                      <motion.div
+                        animate={{
                           y: [0, -5, 0],
                         }}
-                        transition={{ 
+                        transition={{
                           duration: 4,
                           repeat: Infinity,
                           ease: "easeInOut"
@@ -1432,14 +1432,14 @@ export default function App() {
                       </p>
                       <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                         <label className="cursor-pointer">
-                          <input 
-                            type="file" 
-                            accept="image/*" 
-                            className="hidden" 
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
                             onChange={handlePrescriptionScan}
                             disabled={isScanning}
                           />
-                          <motion.div 
+                          <motion.div
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             className={cn(
@@ -1462,15 +1462,15 @@ export default function App() {
                         </label>
 
                         <label className="cursor-pointer">
-                          <input 
-                            type="file" 
-                            accept="image/*" 
+                          <input
+                            type="file"
+                            accept="image/*"
                             capture="environment"
-                            className="hidden" 
+                            className="hidden"
                             onChange={handlePrescriptionScan}
                             disabled={isScanning}
                           />
-                          <motion.div 
+                          <motion.div
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             className={cn(
@@ -1498,7 +1498,7 @@ export default function App() {
                       <CheckCircle2 className="w-5 h-5 text-emerald-600" />
                       Detected Medicines ({scannedMeds.length})
                     </h4>
-                    <button 
+                    <button
                       onClick={() => setScannedMeds([])}
                       className="text-xs font-bold text-zinc-400 hover:text-red-500"
                     >
@@ -1513,15 +1513,15 @@ export default function App() {
                           <p className="text-xs text-emerald-700">{med.dosage} • {med.frequency}</p>
                         </div>
                         <div className="flex items-center gap-2">
-                          <button 
+                          <button
                             onClick={() => handleGetInsight(med)}
                             className="p-2 text-emerald-500 hover:bg-emerald-100 rounded-lg transition-colors"
                             title="AI Insight"
                           >
                             <Sparkles className="w-4 h-4" />
                           </button>
-                          <Button 
-                            variant="primary" 
+                          <Button
+                            variant="primary"
                             className="px-3 py-1.5 text-xs"
                             onClick={async () => {
                               await handleAddMedicine(med);
@@ -1531,7 +1531,7 @@ export default function App() {
                           >
                             Add
                           </Button>
-                          <button 
+                          <button
                             onClick={() => setScannedMeds(prev => prev.filter((_, i) => i !== idx))}
                             className="p-2 text-zinc-400 hover:text-red-500"
                           >
@@ -1549,7 +1549,7 @@ export default function App() {
                 const formData = new FormData(e.currentTarget);
                 const startDateVal = formData.get('start_date') as string;
                 const endDateVal = formData.get('end_date') as string;
-                
+
                 const parsedStartDate = startDateVal ? new Date(startDateVal) : null;
                 const parsedEndDate = endDateVal ? new Date(endDateVal) : null;
 
@@ -1582,25 +1582,25 @@ export default function App() {
                     <label className="block text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-2 ml-1">Reminder Times</label>
                     <div className="space-y-3">
                       {formReminderTimes.map((time, index) => (
-                        <motion.div 
-                          key={index} 
+                        <motion.div
+                          key={index}
                           initial={{ opacity: 0, x: -10 }}
                           animate={{ opacity: 1, x: 0 }}
                           className="flex gap-2"
                         >
-                          <input 
-                            type="time" 
-                            value={time} 
+                          <input
+                            type="time"
+                            value={time}
                             onChange={(e) => {
                               const newTimes = [...formReminderTimes];
                               newTimes[index] = e.target.value;
                               setFormReminderTimes(newTimes);
                             }}
-                            required 
-                            className="flex-1 px-5 py-4 rounded-2xl border border-zinc-200 outline-none focus:ring-2 focus:ring-emerald-500 bg-white shadow-sm" 
+                            required
+                            className="flex-1 px-5 py-4 rounded-2xl border border-zinc-200 outline-none focus:ring-2 focus:ring-emerald-500 bg-white shadow-sm"
                           />
                           {formReminderTimes.length > 1 && (
-                            <motion.button 
+                            <motion.button
                               whileTap={{ scale: 0.9 }}
                               type="button"
                               onClick={() => setFormReminderTimes(formReminderTimes.filter((_, i) => i !== index))}
@@ -1611,7 +1611,7 @@ export default function App() {
                           )}
                         </motion.div>
                       ))}
-                      <motion.button 
+                      <motion.button
                         whileTap={{ scale: 0.95 }}
                         type="button"
                         onClick={() => setFormReminderTimes([...formReminderTimes, '08:00'])}
@@ -1644,7 +1644,7 @@ export default function App() {
           )}
 
           {view === 'chat' && (
-            <motion.div 
+            <motion.div
               key="chat"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -1652,13 +1652,13 @@ export default function App() {
               className="flex flex-col h-[calc(100vh-180px)]"
             >
               <h3 className="text-xl font-bold mb-4">AI Health Assistant</h3>
-              
+
               <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2">
                 {chatHistory.length === 0 && (
                   <div className="text-center py-8 text-zinc-400">
                     <MessageSquare className="w-12 h-12 mx-auto mb-4 opacity-20" />
                     <p className="mb-6">Ask me anything about your medications or health.</p>
-                    
+
                     <div className="grid grid-cols-1 gap-2 max-w-xs mx-auto">
                       <p className="text-xs font-bold uppercase tracking-widest text-zinc-300 mb-2">Example Prompts</p>
                       {[
@@ -1718,7 +1718,7 @@ export default function App() {
               </div>
 
               <div className="relative">
-                <input 
+                <input
                   value={chatInput}
                   onChange={(e) => setChatInput(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
@@ -1726,7 +1726,7 @@ export default function App() {
                   className="w-full px-4 py-3 pr-24 rounded-xl border border-zinc-200 outline-none focus:ring-2 focus:ring-emerald-500"
                 />
                 <div className="absolute right-2 top-1.5 flex gap-1">
-                  <button 
+                  <button
                     onClick={() => startListening('chat')}
                     disabled={isListening}
                     className={cn(
@@ -1737,7 +1737,7 @@ export default function App() {
                   >
                     {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
                   </button>
-                  <button 
+                  <button
                     onClick={handleSendMessage}
                     disabled={!chatInput.trim() || isChatLoading}
                     className="p-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50"
@@ -1750,7 +1750,7 @@ export default function App() {
           )}
 
           {view === 'settings' && (
-            <motion.div 
+            <motion.div
               key="settings"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -1770,7 +1770,7 @@ export default function App() {
                   <h4 className="font-bold">Reminder Sound</h4>
                 </div>
                 <p className="text-sm text-zinc-500 mb-4">Choose the sound that plays for your medicine reminders.</p>
-                
+
                 <div className="space-y-2">
                   {['default', 'chime', 'pulse', 'custom'].map((sound) => (
                     <div key={sound} className="space-y-2">
@@ -1779,8 +1779,8 @@ export default function App() {
                           onClick={() => handleUpdateSound(sound)}
                           className={cn(
                             "flex-1 flex items-center justify-between p-4 rounded-xl border transition-all",
-                            user?.reminder_sound === sound 
-                              ? "border-emerald-500 bg-emerald-50 text-emerald-700" 
+                            user?.reminder_sound === sound
+                              ? "border-emerald-500 bg-emerald-50 text-emerald-700"
                               : "border-zinc-100 hover:border-zinc-200"
                           )}
                         >
@@ -1792,7 +1792,7 @@ export default function App() {
                           </div>
                           {user?.reminder_sound === sound && <CheckCircle2 className="w-5 h-5" />}
                         </button>
-                        <button 
+                        <button
                           onClick={() => playReminderSound(sound)}
                           className="p-4 rounded-xl border border-zinc-100 hover:bg-zinc-50 text-zinc-400 hover:text-emerald-600 transition-all"
                           title="Test Sound"
@@ -1800,16 +1800,16 @@ export default function App() {
                           <Volume2 className="w-5 h-5" />
                         </button>
                       </div>
-                      
+
                       {sound === 'custom' && (
                         <div className="px-2">
                           <label className="flex items-center gap-2 text-xs text-zinc-500 cursor-pointer hover:text-emerald-600 transition-colors">
                             <Upload className="w-3 h-3" />
                             <span>{user?.custom_sound_data ? 'Replace custom sound' : 'Upload custom sound (MP3/WAV)'}</span>
-                            <input 
-                              type="file" 
-                              accept="audio/*" 
-                              className="hidden" 
+                            <input
+                              type="file"
+                              accept="audio/*"
+                              className="hidden"
                               onChange={handleFileUpload}
                             />
                           </label>
@@ -1826,7 +1826,7 @@ export default function App() {
                   <h4 className="font-bold">App Language</h4>
                 </div>
                 <p className="text-sm text-zinc-500 mb-4">Select your preferred language for AI chat and translations.</p>
-                
+
                 <div className="grid grid-cols-2 gap-2">
                   {LANGUAGES.map((lang) => (
                     <button
@@ -1834,8 +1834,8 @@ export default function App() {
                       onClick={() => handleUpdateLanguage(lang.code)}
                       className={cn(
                         "flex items-center justify-between p-3 rounded-xl border transition-all text-sm",
-                        user?.language === lang.code 
-                          ? "border-emerald-500 bg-emerald-50 text-emerald-700 font-bold" 
+                        user?.language === lang.code
+                          ? "border-emerald-500 bg-emerald-50 text-emerald-700 font-bold"
                           : "border-zinc-100 hover:border-zinc-200"
                       )}
                     >
@@ -1885,14 +1885,14 @@ export default function App() {
                   Dosage: <span className="font-bold text-zinc-900">{activeReminder.dosage}</span>
                   {activeReminder.instructions && <><br />{activeReminder.instructions}</>}
                 </p>
-                
+
                 <div className="space-y-3">
                   <Button className="w-full py-4 text-lg" onClick={handleTakeNow}>
                     <CheckCircle2 className="w-6 h-6" /> I've Taken It
                   </Button>
-                  
+
                   <div className="grid grid-cols-2 gap-3">
-                    <button 
+                    <button
                       onClick={() => {
                         handleSnooze(activeReminder.id, 15);
                         setActiveReminder(null);
@@ -1901,7 +1901,7 @@ export default function App() {
                     >
                       Snooze 15m
                     </button>
-                    <button 
+                    <button
                       onClick={() => {
                         handleSnooze(activeReminder.id, 60);
                         setActiveReminder(null);
@@ -1911,8 +1911,8 @@ export default function App() {
                       Snooze 1h
                     </button>
                   </div>
-                  
-                  <button 
+
+                  <button
                     onClick={() => setActiveReminder(null)}
                     className="w-full py-3 text-zinc-400 font-bold text-sm hover:text-zinc-600 transition-colors"
                   >
@@ -1927,7 +1927,7 @@ export default function App() {
 
       {/* Navigation Bar */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-lg border-t border-zinc-100 px-6 py-3 pb-safe flex items-center justify-around z-40 shadow-[0_-4px_20px_rgba(0,0,0,0.03)]">
-        <motion.button 
+        <motion.button
           whileTap={{ scale: 0.9 }}
           onClick={() => setView('dashboard')}
           className={cn(
@@ -1938,8 +1938,8 @@ export default function App() {
           <Calendar className="w-6 h-6" />
           <span className="text-[9px] font-bold uppercase tracking-widest">Schedule</span>
         </motion.button>
-        
-        <motion.button 
+
+        <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.9 }}
           onClick={() => { setView('add'); setEditingMedicine(null); }}
@@ -1948,7 +1948,7 @@ export default function App() {
           <Plus className="w-8 h-8" />
         </motion.button>
 
-        <motion.button 
+        <motion.button
           whileTap={{ scale: 0.9 }}
           onClick={() => setView('analytics')}
           className={cn(
@@ -1960,7 +1960,7 @@ export default function App() {
           <span className="text-[9px] font-bold uppercase tracking-widest">Analytics</span>
         </motion.button>
 
-        <motion.button 
+        <motion.button
           whileTap={{ scale: 0.9 }}
           onClick={() => setView('chat')}
           className={cn(
@@ -1972,7 +1972,7 @@ export default function App() {
           <span className="text-[9px] font-bold uppercase tracking-widest">Chat</span>
         </motion.button>
 
-        <motion.button 
+        <motion.button
           whileTap={{ scale: 0.9 }}
           onClick={() => setView('settings')}
           className={cn(
@@ -2010,9 +2010,9 @@ export default function App() {
               exit={{ opacity: 0, scale: 0.9 }}
               className={cn(
                 "px-4 py-3 rounded-xl shadow-lg text-sm font-medium pointer-events-auto min-w-[200px] flex items-center gap-3",
-                toast.type === 'success' ? "bg-emerald-600 text-white" : 
-                toast.type === 'error' ? "bg-red-600 text-white" : 
-                "bg-zinc-900 text-white"
+                toast.type === 'success' ? "bg-emerald-600 text-white" :
+                  toast.type === 'error' ? "bg-red-600 text-white" :
+                    "bg-zinc-900 text-white"
               )}
             >
               {toast.type === 'success' && <CheckCircle2 className="w-4 h-4" />}
@@ -2044,7 +2044,7 @@ export default function App() {
                     <p className="text-xs text-emerald-600 font-bold uppercase tracking-wider">AI Insight</p>
                   </div>
                 </div>
-                <button 
+                <button
                   onClick={() => setSelectedInsight(null)}
                   className="p-2 hover:bg-zinc-100 rounded-full transition-colors"
                 >

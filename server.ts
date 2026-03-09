@@ -1,7 +1,7 @@
 import dns from "dns";
 // Fix: Override system DNS (which is ECONNREFUSED) with reliable public resolvers
 // This is required for MongoDB Atlas SRV lookups to work.
-dns.setServers(["8.8.8.8", "1.1.1.1", "8.8.4.4"]);import express from "express";
+dns.setServers(["8.8.8.8", "1.1.1.1", "8.8.4.4"]); import express from "express";
 
 import { createServer as createViteServer } from "vite";
 import path from "path";
@@ -95,7 +95,7 @@ async function seedDatabase() {
       password: hashedPassword,
       name: "Demo User"
     });
-    
+
     const userId = newUser._id;
 
     const meds = [
@@ -130,18 +130,19 @@ async function seedDatabase() {
 }
 
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // Database status middleware
 app.use("/api", async (req, res, next) => {
   if (!isDbConnected) {
     await connectToDatabase();
   }
-  
+
   if (!isDbConnected && req.path !== "/health") {
-    return res.status(503).json({ 
-      error: "Database not connected", 
-      message: "The application is waiting for a valid MongoDB connection. Please check your MONGODB_URI environment variable." 
+    return res.status(503).json({
+      error: "Database not connected",
+      message: "The application is waiting for a valid MongoDB connection. Please check your MONGODB_URI environment variable."
     });
   }
   next();
@@ -167,13 +168,13 @@ const authenticateToken = (req: any, res: any, next: any) => {
 
   jwt.verify(token, JWT_SECRET, async (err: any, user: any) => {
     if (err) return res.sendStatus(403);
-    
+
     // Verify user still exists in DB
     const dbUser = await User.findById(user.id);
     if (!dbUser) {
       return res.status(401).json({ error: "User no longer exists" });
     }
-    
+
     req.user = user;
     next();
   });
@@ -253,11 +254,11 @@ app.put("/api/medicines/:id", authenticateToken, async (req: any, res) => {
 app.delete("/api/medicines/:id", authenticateToken, async (req: any, res) => {
   const medId = req.params.id;
   const userId = req.user.id;
-  
+
   try {
     await Log.deleteMany({ medicine_id: medId, user_id: userId });
     const result = await Medicine.deleteOne({ _id: medId, user_id: userId });
-    
+
     if (result.deletedCount > 0) {
       res.json({ success: true });
     } else {
@@ -285,7 +286,7 @@ app.get("/api/logs", authenticateToken, async (req: any, res) => {
   // We need to join with medicine name for the frontend
   const medicines = await Medicine.find({ user_id: req.user.id });
   const medMap = new Map(medicines.map(m => [m._id.toString(), m.name]));
-  
+
   const logsWithNames = logs.map(l => {
     const logObj = mapId(l);
     return {
@@ -293,7 +294,7 @@ app.get("/api/logs", authenticateToken, async (req: any, res) => {
       medicine_name: medMap.get(l.medicine_id.toString()) || "Unknown"
     };
   });
-  
+
   res.json(logsWithNames);
 });
 
@@ -310,7 +311,7 @@ app.post("/api/logs", authenticateToken, async (req: any, res) => {
 // Analytics Route
 app.get("/api/analytics", authenticateToken, async (req: any, res) => {
   const logs = await Log.find({ user_id: req.user.id });
-  
+
   // Group by date in JS since MongoDB aggregation is more complex for simple date strings
   const statsMap = new Map();
   logs.forEach(log => {
@@ -322,7 +323,7 @@ app.get("/api/analytics", authenticateToken, async (req: any, res) => {
     stat.total++;
     if (log.status === 'taken') stat.taken++;
   });
-  
+
   const stats = Array.from(statsMap.values()).sort((a, b) => a.date.localeCompare(b.date)).slice(-30);
   res.json(stats);
 });
@@ -331,7 +332,7 @@ app.get("/api/behavior-analysis", authenticateToken, async (req: any, res) => {
   try {
     const logs = await Log.find({ user_id: req.user.id });
     const medicines = await Medicine.find({ user_id: req.user.id });
-    
+
     // 1. Adherence by Day of Week
     const dayOfWeekMap = new Map();
     logs.forEach(log => {
@@ -388,7 +389,7 @@ app.post("/api/ai/parse-medicine", authenticateToken, async (req: any, res) => {
     if (!input) {
       return res.status(400).json({ error: "Input is required" });
     }
-    
+
     const { parseMedicineInput } = await import("./src/services/geminiService.ts");
     const result = await parseMedicineInput(input);
     res.json(result);
@@ -404,7 +405,7 @@ app.post("/api/ai/parse-prescription", authenticateToken, async (req: any, res) 
     if (!image) {
       return res.status(400).json({ error: "Image is required" });
     }
-    
+
     const { parsePrescriptionImage } = await import("./src/services/geminiService.ts");
     const result = await parsePrescriptionImage(image);
     res.json(result);
@@ -420,7 +421,7 @@ app.post("/api/ai/chat", authenticateToken, async (req: any, res) => {
     if (!message) {
       return res.status(400).json({ error: "Message is required" });
     }
-    
+
     const { getChatResponse } = await import("./src/services/chatService.ts");
     const response = await getChatResponse(history || [], message, language || 'en');
     res.json({ response });
@@ -436,7 +437,7 @@ app.post("/api/ai/behavior-insights", authenticateToken, async (req: any, res) =
     if (!stats) {
       return res.status(400).json({ error: "Stats are required" });
     }
-    
+
     const { getBehavioralAnalysisInsights } = await import("./src/services/chatService.ts");
     const insights = await getBehavioralAnalysisInsights(stats, language || 'en');
     res.json({ insights });
@@ -452,7 +453,7 @@ app.post("/api/ai/translate", authenticateToken, async (req: any, res) => {
     if (!text || !targetLanguage) {
       return res.status(400).json({ error: "Text and targetLanguage are required" });
     }
-    
+
     const { translateText } = await import("./src/services/chatService.ts");
     const translatedText = await translateText(text, targetLanguage);
     res.json({ text: translatedText });
@@ -468,7 +469,7 @@ app.post("/api/ai/medicine-insights", authenticateToken, async (req: any, res) =
     if (!medicineName || !dosage || !frequency) {
       return res.status(400).json({ error: "Medicine name, dosage, and frequency are required" });
     }
-    
+
     const { getMedicineInsights } = await import("./src/services/chatService.ts");
     const insights = await getMedicineInsights(medicineName, dosage, frequency, instructions, language || 'en');
     res.json({ insights });
@@ -486,9 +487,9 @@ app.all("/api/*", (req, res) => {
 // Global error handler
 app.use((err: any, req: any, res: any, next: any) => {
   console.error("Unhandled Error:", err);
-  res.status(500).json({ 
-    error: "Internal Server Error", 
-    message: process.env.NODE_ENV === 'production' ? "Something went wrong" : err.message 
+  res.status(500).json({
+    error: "Internal Server Error",
+    message: process.env.NODE_ENV === 'production' ? "Something went wrong" : err.message
   });
 });
 
